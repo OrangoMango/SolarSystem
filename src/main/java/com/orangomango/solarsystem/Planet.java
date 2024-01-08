@@ -84,6 +84,10 @@ public class Planet{
 		return this.name;
 	}
 
+	public Color getColor(){
+		return this.color;
+	}
+
 	public double getMass(){
 		return this.mass;
 	}
@@ -104,17 +108,17 @@ public class Planet{
 		return this.x;
 	}
 
-	/*public void setX(double value){
+	public void setX(double value){
 		this.x = value;
-	}*/
+	}
 
 	public double getY(){
 		return this.y;
 	}
 
-	/*public void setY(double value){
+	public void setY(double value){
 		this.y = value;
-	}*/
+	}
 
 	public double getXvel(){
 		return this.xVelocity;

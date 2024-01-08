@@ -2,6 +2,7 @@ package com.orangomango.solarsystem;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
+import javafx.stage.FileChooser;
 import javafx.scene.Scene;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
@@ -12,8 +13,10 @@ import javafx.scene.paint.Color;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.animation.*;
+import javafx.scene.input.MouseButton;
 
 import java.util.*;
+import java.io.*;
 
 public class MainApplication extends Application{
 	private static final int WIDTH = 1000;
@@ -22,6 +25,9 @@ public class MainApplication extends Application{
 	private double mouseX, mouseY;
 	private List<Planet> planets = new ArrayList<>();
 	private volatile boolean paused = false;
+	private double cameraX, cameraY;
+	private double startDragX, startDragY;
+	private Planet selectedPlanet = null;
 
 	@Override
 	public void start(Stage stage){
@@ -31,16 +37,129 @@ public class MainApplication extends Application{
 		pane.setVgap(5);
 		Canvas canvas = new Canvas(WIDTH, HEIGHT);
 		GraphicsContext gc  = canvas.getGraphicsContext2D();
-		pane.add(canvas, 0, 0);
+		pane.add(canvas, 0, 1);
 
 		canvas.setOnMouseMoved(e -> {
-			this.mouseX = e.getSceneX();
-			this.mouseY = e.getSceneY();
+			this.mouseX = e.getX();
+			this.mouseY = e.getY();
 		});
+
+		canvas.setOnMousePressed(e -> {
+			this.startDragX = e.getX();
+			this.startDragY = e.getY();
+			for (Planet planet : this.planets){
+				Point2D pos = new Point2D(planet.getX(), planet.getY());
+				if (pos.distance(e.getX()+this.cameraX, e.getY()+this.cameraY) < planet.getRadius()){
+					this.selectedPlanet = planet;
+					break;
+				}
+			}
+		});
+
+		canvas.setOnMouseDragged(e -> {
+			if (e.getButton() == MouseButton.PRIMARY){
+				if (this.selectedPlanet != null){
+					this.selectedPlanet.setX(e.getX()+this.cameraX);
+					this.selectedPlanet.setY(e.getY()+this.cameraY);
+				}
+			} else if (e.getButton() == MouseButton.SECONDARY){
+				this.cameraX += this.startDragX-e.getX();
+				this.cameraY += this.startDragY-e.getY();
+				this.startDragX = e.getX();
+				this.startDragY = e.getY();
+			}
+		});
+
+		canvas.setOnMouseReleased(e -> {
+			this.selectedPlanet = null;
+		});
+
+		MenuBar menuBar = new MenuBar();
+		Menu fileMenu = new Menu("File");
+		MenuItem saveMenuItem = new MenuItem("Save");
+		saveMenuItem.setOnAction(e -> {
+			FileChooser chooser = new FileChooser();
+			File file = chooser.showSaveDialog(stage);
+			if (file != null){
+				try {
+					BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+					for (Planet planet : this.planets){
+						writer.write(planet.getName()+"\n");
+						writer.write(String.format("%s %s %s\n", planet.getColor().getRed(), planet.getColor().getGreen(), planet.getColor().getBlue()));
+						writer.write(Double.toString(planet.getRadius())+"\n");
+						writer.write(Double.toString(planet.getMass())+"\n");
+						writer.write(Double.toString(planet.getX())+"\n");
+						writer.write(Double.toString(planet.getY())+"\n");
+						writer.write(Double.toString(planet.getXvel())+"\n");
+						writer.write(Double.toString(planet.getYvel())+"\n\n");
+					}
+					writer.close();
+				} catch (IOException ex){
+					ex.printStackTrace();
+				}
+			}
+		});
+		MenuItem openMenuItem = new MenuItem("Open");
+		openMenuItem.setOnAction(e -> {
+			FileChooser chooser = new FileChooser();
+			File file = chooser.showOpenDialog(stage);
+			if (file != null){
+				try {
+					BufferedReader reader = new BufferedReader(new FileReader(file));
+					this.planets.clear();
+					String line;
+					String name = null;
+					Color color = null;
+					double r = 0, m = 0, x = 0, y = 0, xVel = 0, yVel = 0;
+					int count = 0;
+					while ((line = reader.readLine()) != null){
+						if (line.isBlank()){
+							Planet planet = new Planet(name, color, r, m, x, y, xVel, yVel);
+							this.planets.add(planet);
+							count = 0;
+						} else {
+							switch (count){
+								case 0:
+									name = line;
+									break;
+								case 1:
+									color = Color.color(Double.parseDouble(line.split(" ")[0]), Double.parseDouble(line.split(" ")[1]), Double.parseDouble(line.split(" ")[2]));
+									break;
+								case 2:
+									r = Double.parseDouble(line);
+									break;
+								case 3:
+									m = Double.parseDouble(line);
+									break;
+								case 4:
+									x = Double.parseDouble(line);
+									break;
+								case 5:
+									y = Double.parseDouble(line);
+									break;
+								case 6:
+									xVel = Double.parseDouble(line);
+									break;
+								case 7:
+									yVel = Double.parseDouble(line);
+									break;
+							}
+							count++;
+						}
+					}
+				} catch (IOException ex){
+					ex.printStackTrace();
+				}
+			}
+		});
+
+		menuBar.getMenus().add(fileMenu);
+		fileMenu.getItems().addAll(saveMenuItem, openMenuItem);
+		pane.add(menuBar, 0, 0, 2, 1);
 
 		VBox settings = new VBox();
 		settings.setSpacing(5);
-		pane.add(settings, 1, 0);
+		pane.add(settings, 1, 1);
 		TextField planetName = new TextField();
 		planetName.setPromptText("Planet name");
 		TextField mass = new TextField();
@@ -69,8 +188,7 @@ public class MainApplication extends Application{
 		});
 
 		// Test
-		this.planets.add(new Planet("Test", Color.CYAN, 20, 10, 300, 300, 0, 0));
-		this.planets.add(new Planet("Test 2", Color.YELLOW, 10, 1, 300, 250, 0.4, 0));
+		reset();
 
 		TextField gConstant = new TextField();
 		gConstant.setPromptText("G");
@@ -80,6 +198,8 @@ public class MainApplication extends Application{
 		pause.setOnAction(e -> this.paused = true);
 		Button resume = new Button("RESUME");
 		resume.setOnAction(e -> this.paused = false);
+		Button reset = new Button("RESET");
+		reset.setOnAction(e -> reset());
 
 		Button clearOrbit = new Button("Clear orbit");
 		clearOrbit.setOnAction(e -> {
@@ -102,11 +222,11 @@ public class MainApplication extends Application{
 			this.planets.get(Integer.parseInt(planetIndex.getText())).setMass(m);
 			simulateFrames(Integer.parseInt(amount.getText()));
 		});
-		UiSlider xVelSlider = new UiSlider(0, 1, 0, xv -> {
+		UiSlider xVelSlider = new UiSlider(0, 10, 0, xv -> {
 			this.planets.get(Integer.parseInt(planetIndex.getText())).setXvel(xv);
 			simulateFrames(Integer.parseInt(amount.getText()));
 		});
-		UiSlider yVelSlider = new UiSlider(0, 1, 0, yv -> {
+		UiSlider yVelSlider = new UiSlider(0, 10, 0, yv -> {
 			this.planets.get(Integer.parseInt(planetIndex.getText())).setYvel(yv);
 			simulateFrames(Integer.parseInt(amount.getText()));
 		});
@@ -120,7 +240,7 @@ public class MainApplication extends Application{
 
 		settings.getChildren().addAll(new HBox(3, gConstant, apply));
 		settings.getChildren().addAll(new Separator(), planetName, mass, color, radius, new HBox(3, xPos, yPos), new HBox(3, xVel, yVel), new HBox(3, addPlanet));
-		settings.getChildren().addAll(new Separator(), new HBox(3, pause, resume));
+		settings.getChildren().addAll(new Separator(), new HBox(3, pause, resume, reset));
 		settings.getChildren().addAll(new Separator(), clearOrbit, new HBox(3, planetIndex, amount, loadSliders));
 		settings.getChildren().addAll(radiusSlider.getNode(), massSlider.getNode(), xVelSlider.getNode(), yVelSlider.getNode());
 
@@ -137,6 +257,15 @@ public class MainApplication extends Application{
 		stage.setTitle("Solar System");
 		stage.setResizable(false);
 		stage.show();
+	}
+
+	private void reset(){
+		this.planets.clear();
+		this.planets.add(new Planet("Earth", Color.CYAN, 20, 10, 300, 300, 0, 0));
+		this.planets.add(new Planet("Moon", Color.GRAY, 10, 1, 300, 250, 0.4, 0));
+		this.planets.add(new Planet("Sun", Color.YELLOW, 40, 1000, 600, 550, 0, 0));
+		this.cameraX = 0;
+		this.cameraY = 0;
 	}
 
 	private void simulateFrames(int amount){
@@ -166,6 +295,9 @@ public class MainApplication extends Application{
 		gc.setFill(Color.BLACK);
 		gc.fillRect(0, 0, WIDTH, HEIGHT);
 
+		gc.save();
+		gc.translate(-this.cameraX, -this.cameraY);
+
 		for (int i = 0; i < this.planets.size(); i++){
 			Planet planet = this.planets.get(i);
 			if (!this.paused){
@@ -179,12 +311,30 @@ public class MainApplication extends Application{
 				planet.updatePosition();
 			}
 			planet.render(gc);
+			if (planet == this.selectedPlanet){
+				gc.setStroke(Color.RED);
+				gc.setLineWidth(1.5);
+				gc.strokeRect(planet.getX()-planet.getRadius(), planet.getY()-planet.getRadius(), planet.getRadius()*2, planet.getRadius()*2);
+				gc.setFill(Color.RED);
+				gc.fillText(Integer.toString(i), planet.getX()-planet.getRadius(), planet.getY()-planet.getRadius()-7);
+			}
 		}
+
+		gc.restore();
 
 		gc.setFill(Color.WHITE);
 		StringBuilder builder = new StringBuilder();
 		builder.append("Debug info\n");
 		builder.append("Mouse position: ").append(String.format("%.1f %.1f", this.mouseX, this.mouseY));
+		if (this.selectedPlanet != null){
+			builder.append("\nSelected planet: "+this.selectedPlanet.getName()+"\n");
+			builder.append(String.format("Planet radius: %.3f\n", this.selectedPlanet.getRadius()));
+			builder.append(String.format("Planet mass: %.3f\n", this.selectedPlanet.getMass()));
+			builder.append(String.format("Planet x: %.3f\n", this.selectedPlanet.getX()));
+			builder.append(String.format("Planet y: %.3f\n", this.selectedPlanet.getY()));
+			builder.append(String.format("Planet xVel: %.3f\n", this.selectedPlanet.getXvel()));
+			builder.append(String.format("Planet yVel: %.3f", this.selectedPlanet.getYvel()));
+		}
 		gc.fillText(builder.toString(), 20, 20);
 	}
 
