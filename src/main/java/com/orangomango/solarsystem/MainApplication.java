@@ -10,6 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.canvas.*;
 import javafx.scene.paint.Color;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.animation.*;
 
 import java.util.*;
@@ -66,39 +67,10 @@ public class MainApplication extends Application{
 			Planet planet = new Planet(planetName.getText(), color.getValue(), r, m, x, y, xv, yv);
 			this.planets.add(planet);
 		});
-		TextField updateIndex = new TextField();
-		updateIndex.setPromptText("Index");
-		Button updatePlanet = new Button("Update");
-		updatePlanet.setOnAction(e -> {
-			if (updateIndex.getText().startsWith(":")){
-				Planet planet = this.planets.get(Integer.parseInt(updateIndex.getText().substring(1)));
-				planetName.setText(planet.getName());
-				radius.setText(Double.toString(planet.getRadius()));
-				mass.setText(Double.toString(planet.getMass()));
-				xPos.setText(Double.toString(planet.getX()));
-				yPos.setText(Double.toString(planet.getY()));
-				xVel.setText(Double.toString(planet.getXvel()));
-				yVel.setText(Double.toString(planet.getYvel()));
-			} else {
-				double r = Double.parseDouble(radius.getText());
-				double m = Double.parseDouble(mass.getText());
-				double x = Double.parseDouble(xPos.getText());
-				double y = Double.parseDouble(yPos.getText());
-				double xv = Double.parseDouble(xVel.getText());
-				double yv = Double.parseDouble(yVel.getText());
-				Planet planet = this.planets.get(Integer.parseInt(updateIndex.getText()));
-				planet.setRadius(r);
-				planet.setMass(m);
-				planet.setX(x);
-				planet.setY(y);
-				planet.setXvel(xv);
-				planet.setYvel(yv);
-			}
-		});
 
 		// Test
-		this.planets.add(new Planet("Test", Color.CYAN, 25, 10, 300, 300, 0, 0));
-		this.planets.add(new Planet("Test 2", Color.YELLOW, 10, 1, 300, 250, 1.1, 0));
+		this.planets.add(new Planet("Test", Color.CYAN, 20, 10, 300, 300, 0, 0));
+		this.planets.add(new Planet("Test 2", Color.YELLOW, 10, 1, 300, 250, 0.4, 0));
 
 		TextField gConstant = new TextField();
 		gConstant.setPromptText("G");
@@ -109,23 +81,48 @@ public class MainApplication extends Application{
 		Button resume = new Button("RESUME");
 		resume.setOnAction(e -> this.paused = false);
 
-		Button clearOrbits = new Button("Clear orbits");
-		clearOrbits.setOnAction(e -> {
+		Button clearOrbit = new Button("Clear orbit");
+		clearOrbit.setOnAction(e -> {
 			for (Planet p : this.planets){
 				p.orbit.clear();
 			}
 		});
 		TextField planetIndex = new TextField();
+		planetIndex.setMaxWidth(70);
 		planetIndex.setPromptText("Index");
-		TextField amount = new TextField();
+		TextField amount = new TextField("1000");
+		amount.setMaxWidth(70);
 		amount.setPromptText("Amount");
-		Button makeOrbit = new Button("Make orbit");
-		makeOrbit.setOnAction(e -> this.planets.get(Integer.parseInt(planetIndex.getText())).makeOrbit(this.planets, Integer.parseInt(amount.getText())));
+		Button loadSliders = new Button("Load data");
+		UiSlider radiusSlider = new UiSlider(0, 10, 0, r -> {
+			this.planets.get(Integer.parseInt(planetIndex.getText())).setRadius(r);
+			simulateFrames(Integer.parseInt(amount.getText()));
+		});
+		UiSlider massSlider = new UiSlider(0, 10, 0, m -> {
+			this.planets.get(Integer.parseInt(planetIndex.getText())).setMass(m);
+			simulateFrames(Integer.parseInt(amount.getText()));
+		});
+		UiSlider xVelSlider = new UiSlider(0, 1, 0, xv -> {
+			this.planets.get(Integer.parseInt(planetIndex.getText())).setXvel(xv);
+			simulateFrames(Integer.parseInt(amount.getText()));
+		});
+		UiSlider yVelSlider = new UiSlider(0, 1, 0, yv -> {
+			this.planets.get(Integer.parseInt(planetIndex.getText())).setYvel(yv);
+			simulateFrames(Integer.parseInt(amount.getText()));
+		});
+		loadSliders.setOnAction(e -> {
+			Planet planet = this.planets.get(Integer.parseInt(planetIndex.getText()));
+			radiusSlider.setValue(planet.getRadius());
+			massSlider.setValue(planet.getMass());
+			xVelSlider.setValue(planet.getXvel());
+			yVelSlider.setValue(planet.getYvel());
+		});
 
 		settings.getChildren().addAll(new HBox(3, gConstant, apply));
-		settings.getChildren().addAll(new Separator(), planetName, mass, color, radius, new HBox(3, xPos, yPos), new HBox(3, xVel, yVel), new HBox(3, addPlanet), new HBox(3, updateIndex, updatePlanet));
+		settings.getChildren().addAll(new Separator(), planetName, mass, color, radius, new HBox(3, xPos, yPos), new HBox(3, xVel, yVel), new HBox(3, addPlanet));
 		settings.getChildren().addAll(new Separator(), new HBox(3, pause, resume));
-		settings.getChildren().addAll(new Separator(), clearOrbits, new HBox(3, planetIndex, makeOrbit));
+		settings.getChildren().addAll(new Separator(), clearOrbit, new HBox(3, planetIndex, amount, loadSliders));
+		settings.getChildren().addAll(radiusSlider.getNode(), massSlider.getNode(), xVelSlider.getNode(), yVelSlider.getNode());
 
 		AnimationTimer loop = new AnimationTimer(){
 			@Override
@@ -140,6 +137,28 @@ public class MainApplication extends Application{
 		stage.setTitle("Solar System");
 		stage.setResizable(false);
 		stage.show();
+	}
+
+	private void simulateFrames(int amount){
+		List<double[]> backup = new ArrayList<>();
+		for (Planet planet : this.planets){
+			planet.orbit.clear();
+			backup.add(planet.backup());
+		}
+
+		for (int i = 0; i < amount; i++){
+			for (Planet planet : this.planets){
+				planet.updateVelocity(this.planets);
+			}
+			for (Planet planet : this.planets){
+				planet.updatePosition();
+				planet.orbit.add(new Point2D(planet.getX(), planet.getY()));
+			}
+		}
+
+		for (int i = 0; i < this.planets.size(); i++){
+			this.planets.get(i).restore(backup.get(i));
+		}
 	}
 
 	private void update(GraphicsContext gc){

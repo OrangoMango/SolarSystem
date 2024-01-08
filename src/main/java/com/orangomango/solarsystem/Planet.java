@@ -58,22 +58,15 @@ public class Planet{
 		this.y += this.yVelocity;
 	}
 
-	public void makeOrbit(List<Planet> planets, int amount){
-		double backupX = this.x;
-		double backupY = this.y;
-		double backupXvel = this.xVelocity;
-		double backupYvel = this.yVelocity;
-		this.orbit.clear();
-		for (int i = 0; i < amount; i++){
-			updateVelocity(planets);
-			updatePosition();
-			this.orbit.add(new Point2D(this.x, this.y));
-		}
+	public double[] backup(){
+		return new double[]{this.x, this.y, this.xVelocity, this.yVelocity};
+	}
 
-		this.x = backupX;
-		this.y = backupY;
-		this.xVelocity = backupXvel;
-		this.yVelocity = backupYvel;
+	public void restore(double[] backup){
+		this.x = backup[0];
+		this.y = backup[1];
+		this.xVelocity = backup[2];
+		this.yVelocity = backup[3];
 	}
 
 	public void render(GraphicsContext gc){
@@ -111,17 +104,17 @@ public class Planet{
 		return this.x;
 	}
 
-	public void setX(double value){
+	/*public void setX(double value){
 		this.x = value;
-	}
+	}*/
 
 	public double getY(){
 		return this.y;
 	}
 
-	public void setY(double value){
+	/*public void setY(double value){
 		this.y = value;
-	}
+	}*/
 
 	public double getXvel(){
 		return this.xVelocity;
