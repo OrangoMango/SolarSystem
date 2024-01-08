@@ -26,6 +26,7 @@ public class MainApplication extends Application{
 	private List<Planet> planets = new ArrayList<>();
 	private volatile boolean paused = false;
 	private double cameraX, cameraY;
+	private double scale = 1;
 	private double startDragX, startDragY;
 	private Planet selectedPlanet = null;
 
@@ -49,9 +50,16 @@ public class MainApplication extends Application{
 			this.startDragY = e.getY();
 			for (Planet planet : this.planets){
 				Point2D pos = new Point2D(planet.getX(), planet.getY());
-				if (pos.distance(e.getX()+this.cameraX, e.getY()+this.cameraY) < planet.getRadius()){
+				if (pos.distance(e.getX()/this.scale+this.cameraX, e.getY()/this.scale+this.cameraY) < planet.getRadius()){
 					this.selectedPlanet = planet;
 					break;
+				}
+			}
+
+			if (e.getButton() == MouseButton.MIDDLE){
+				if (this.selectedPlanet != null){
+					this.planets.remove(this.selectedPlanet);
+					this.selectedPlanet = null;
 				}
 			}
 		});
@@ -59,8 +67,8 @@ public class MainApplication extends Application{
 		canvas.setOnMouseDragged(e -> {
 			if (e.getButton() == MouseButton.PRIMARY){
 				if (this.selectedPlanet != null){
-					this.selectedPlanet.setX(e.getX()+this.cameraX);
-					this.selectedPlanet.setY(e.getY()+this.cameraY);
+					this.selectedPlanet.setX(e.getX()/this.scale+this.cameraX);
+					this.selectedPlanet.setY(e.getY()/this.scale+this.cameraY);
 				}
 			} else if (e.getButton() == MouseButton.SECONDARY){
 				this.cameraX += this.startDragX-e.getX();
@@ -72,6 +80,14 @@ public class MainApplication extends Application{
 
 		canvas.setOnMouseReleased(e -> {
 			this.selectedPlanet = null;
+		});
+
+		canvas.setOnScroll(e -> {
+			if (e.getDeltaY() > 0){
+				this.scale += 0.1;
+			} else if (e.getDeltaY() < 0){
+				this.scale -= 0.1;
+			}
 		});
 
 		MenuBar menuBar = new MenuBar();
@@ -193,6 +209,7 @@ public class MainApplication extends Application{
 		TextField gConstant = new TextField();
 		gConstant.setPromptText("G");
 		Button apply = new Button("Apply");
+		apply.setOnAction(e -> Planet.G = Double.parseDouble(gConstant.getText()));
 
 		Button pause = new Button("PAUSE");
 		pause.setOnAction(e -> this.paused = true);
@@ -213,6 +230,8 @@ public class MainApplication extends Application{
 		TextField amount = new TextField("1000");
 		amount.setMaxWidth(70);
 		amount.setPromptText("Amount");
+		Button simulate = new Button("Simulate");
+		simulate.setOnAction(e -> simulateFrames(Integer.parseInt(amount.getText())));
 		Button loadSliders = new Button("Load data");
 		UiSlider radiusSlider = new UiSlider(0, 10, 0, r -> {
 			this.planets.get(Integer.parseInt(planetIndex.getText())).setRadius(r);
@@ -241,7 +260,7 @@ public class MainApplication extends Application{
 		settings.getChildren().addAll(new HBox(3, gConstant, apply));
 		settings.getChildren().addAll(new Separator(), planetName, mass, color, radius, new HBox(3, xPos, yPos), new HBox(3, xVel, yVel), new HBox(3, addPlanet));
 		settings.getChildren().addAll(new Separator(), new HBox(3, pause, resume, reset));
-		settings.getChildren().addAll(new Separator(), clearOrbit, new HBox(3, planetIndex, amount, loadSliders));
+		settings.getChildren().addAll(new Separator(), new HBox(3, clearOrbit, simulate), new HBox(3, planetIndex, amount, loadSliders));
 		settings.getChildren().addAll(radiusSlider.getNode(), massSlider.getNode(), xVelSlider.getNode(), yVelSlider.getNode());
 
 		AnimationTimer loop = new AnimationTimer(){
@@ -296,6 +315,7 @@ public class MainApplication extends Application{
 		gc.fillRect(0, 0, WIDTH, HEIGHT);
 
 		gc.save();
+		gc.scale(this.scale, this.scale);
 		gc.translate(-this.cameraX, -this.cameraY);
 
 		for (int i = 0; i < this.planets.size(); i++){
@@ -325,7 +345,8 @@ public class MainApplication extends Application{
 		gc.setFill(Color.WHITE);
 		StringBuilder builder = new StringBuilder();
 		builder.append("Debug info\n");
-		builder.append("Mouse position: ").append(String.format("%.1f %.1f", this.mouseX, this.mouseY));
+		builder.append("Mouse position: ").append(String.format("%.1f %.1f\n", this.mouseX, this.mouseY));
+		builder.append("G: "+Planet.G);
 		if (this.selectedPlanet != null){
 			builder.append("\nSelected planet: "+this.selectedPlanet.getName()+"\n");
 			builder.append(String.format("Planet radius: %.3f\n", this.selectedPlanet.getRadius()));

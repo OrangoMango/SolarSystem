@@ -14,6 +14,8 @@ public class Planet{
 	private Color color;
 	public List<Point2D> orbit = new ArrayList<>();
 
+	public static double G = 1;
+
 	public Planet(String name, Color color, double radius, double mass, double x, double y, double xVelocity, double yVelocity){
 		this.name = name;
 		this.color = color;
@@ -30,7 +32,7 @@ public class Planet{
 		double distanceY = planet.y-this.y;
 		double distance = Math.sqrt(Math.pow(distanceX, 2)+Math.pow(distanceY, 2));
 
-		double force = this.mass*planet.mass/Math.pow(distance, 2);
+		double force = G*this.mass*planet.mass/Math.pow(distance, 2);
 		double angle = Math.atan2(distanceY, distanceX);
 		double forceX = force * Math.cos(angle);
 		double forceY = force * Math.sin(angle);
