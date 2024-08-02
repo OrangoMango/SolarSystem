@@ -233,19 +233,19 @@ public class MainApplication extends Application{
 		Button simulate = new Button("Simulate");
 		simulate.setOnAction(e -> simulateFrames(Integer.parseInt(amount.getText())));
 		Button loadSliders = new Button("Load data");
-		UiSlider radiusSlider = new UiSlider(0, 10, 0, r -> {
+		UiSlider radiusSlider = new UiSlider("r", r -> {
 			this.planets.get(Integer.parseInt(planetIndex.getText())).setRadius(r);
 			simulateFrames(Integer.parseInt(amount.getText()));
 		});
-		UiSlider massSlider = new UiSlider(0, 10, 0, m -> {
+		UiSlider massSlider = new UiSlider("m", m -> {
 			this.planets.get(Integer.parseInt(planetIndex.getText())).setMass(m);
 			simulateFrames(Integer.parseInt(amount.getText()));
 		});
-		UiSlider xVelSlider = new UiSlider(0, 10, 0, xv -> {
+		UiSlider xVelSlider = new UiSlider("xv", xv -> {
 			this.planets.get(Integer.parseInt(planetIndex.getText())).setXvel(xv);
 			simulateFrames(Integer.parseInt(amount.getText()));
 		});
-		UiSlider yVelSlider = new UiSlider(0, 10, 0, yv -> {
+		UiSlider yVelSlider = new UiSlider("yv", yv -> {
 			this.planets.get(Integer.parseInt(planetIndex.getText())).setYvel(yv);
 			simulateFrames(Integer.parseInt(amount.getText()));
 		});
@@ -271,7 +271,7 @@ public class MainApplication extends Application{
 		};
 		loop.start();
 
-		Scene scene = new Scene(pane, WIDTH+300, HEIGHT+60);
+		Scene scene = new Scene(pane, WIDTH+500, HEIGHT+60);
 		stage.setScene(scene);
 		stage.setTitle("Solar System");
 		stage.setResizable(false);
@@ -354,7 +354,8 @@ public class MainApplication extends Application{
 			builder.append(String.format("Planet x: %.3f\n", this.selectedPlanet.getX()));
 			builder.append(String.format("Planet y: %.3f\n", this.selectedPlanet.getY()));
 			builder.append(String.format("Planet xVel: %.3f\n", this.selectedPlanet.getXvel()));
-			builder.append(String.format("Planet yVel: %.3f", this.selectedPlanet.getYvel()));
+			builder.append(String.format("Planet yVel: %.3f\n", this.selectedPlanet.getYvel()));
+			builder.append(String.format("Planet vel: %.3f", Math.sqrt(Math.pow(this.selectedPlanet.getXvel(), 2)+Math.pow(this.selectedPlanet.getYvel(), 2))));
 		}
 		gc.fillText(builder.toString(), 20, 20);
 	}
