@@ -1,0 +1,40 @@
+{
+	"timestep" : 1,
+	"g" : 1,
+	"maxOrbitSize" : 100,
+	"scale" : 1,
+	"planets" : [
+		{
+			"name" : "Sun 1",
+			"color" : [1.0, 1.0, 0.0],
+			"radius" : 0.5,
+			"mass" : 20,
+			"distance" : -200,
+			"velocity" : 0.0
+		},
+		{
+			"name" : "Sun 2",
+			"color" : [1.0, 1.0, 0.0],
+			"radius" : 0.5,
+			"mass" : 20,
+			"distance" : 200,
+			"velocity" : 0.0
+		},
+		{
+			"name" : "Planet 1",
+			"color" : [1.0, 0.0, 0.0],
+			"radius" : 0.2,
+			"mass" : 0.02,
+			"distance" : 240,
+			"velocity" : 0.6
+		},
+		{
+			"name" : "Planet 2",
+			"color" : [0.0, 0.0, 1.0],
+			"radius" : 0.2,
+			"mass" : 0.02,
+			"distance" : -240,
+			"velocity" : 0.6
+		}
+	]
+}

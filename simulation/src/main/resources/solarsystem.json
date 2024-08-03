@@ -1,0 +1,89 @@
+{
+	"timestep" : 86400,
+	"g" : 6.6743E-11,
+	"maxOrbitSize" : 100,
+	"scale" : 1.33E-9,
+	"planets" : [
+		{
+			"name" : "Sun",
+			"color" : [1.0, 1.0, 0.0],
+			"radius" : 6.96E8,
+			"mass" : 1.989E30,
+			"distance" : 0.0,
+			"velocity" : 0.0
+		},
+		{
+			"name" : "Mercury",
+			"color" : [1.0, 0.6470588445663452, 0.0],
+			"radius" : 2400000.0,
+			"mass" : 3.3E23,
+			"distance" : 6.982E10,
+			"velocity" : 47900.0
+		},
+		{
+			"name" : "Venus",
+			"color" : [0.0, 1.0, 0.0],
+			"radius" : 6000000.0,
+			"mass" : 4.86E24,
+			"distance" : 1.08E11,
+			"velocity" : 35000.0
+		},
+		{
+			"name" : "Earth",
+			"color" : [0.0, 1.0, 1.0],
+			"radius" : 6300000.0,
+			"mass" : 5.972E24,
+			"distance" : 1.5E11,
+			"velocity" : 29800.0
+		},
+		{
+			"name" : "Moon",
+			"color" : [0.501960813999176, 0.501960813999176, 0.501960813999176],
+			"radius" : 1700000.0,
+			"mass" : 7.35E22,
+			"distance" : 1.50384E11,
+			"velocity" : 30822.0
+		},
+		{
+			"name" : "Mars",
+			"color" : [1.0, 0.0, 0.0],
+			"radius" : 3400000.0,
+			"mass" : 6.41E23,
+			"distance" : 2.49E11,
+			"velocity" : 24100.0
+		},
+		{
+			"name" : "Jupiter",
+			"color" : [0.6470588445663452, 0.16470588743686676, 0.16470588743686676],
+			"radius" : 6.9E7,
+			"mass" : 1.89E27,
+			"distance" : 7.78E11,
+			"velocity" : 13100.0
+		},
+		{
+			"name" : "Saturn",
+			"color" : [1.0, 1.0, 1.0],
+			"radius" : 5.82E7,
+			"mass" : 5.68E26,
+			"distance" : 1.43E12,
+			"velocity" : 9680.0
+		},
+		{
+			"name" : "Uranus",
+			"color" : [0.0, 0.0, 1.0],
+			"radius" : 2.53E7,
+			"mass" : 8.68E25,
+			"distance" : 2.87E12,
+			"velocity" : 6800.0
+		},
+		{
+			"name" : "Neptune",
+			"color" : [0.0, 1.0, 1.0],
+			"radius" : 2.46E7,
+			"mass" : 1.024E26,
+			"distance" : 4.5E12,
+			"velocity" : 5430.0
+		}
+
+	]
+}

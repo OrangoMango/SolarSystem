@@ -23,6 +23,10 @@ application {
     mainClass = 'com.orangomango.solarsystem.MainApplication'
 }
 
+dependencies {
+    implementation "org.json:json:20220924"
+}
+
 javafx {
     version = '17.0.2'
     modules = ['javafx.controls']
