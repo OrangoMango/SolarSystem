@@ -11,10 +11,11 @@ public class Planet{
 	private double mass, radius;
 	private double xVelocity, yVelocity;
 	private Color color;
+	private ArrayList<Point2D> orbit = new ArrayList<>();
 
 	public Planet(Color color, double r, double m, double d, double v){
 		this.color = color;
-		this.radius = Math.random()*8; //r;
+		this.radius = r; //Math.min(16, r/6.3e6*8);
 		this.mass = m;
 		this.x = -d;
 		this.yVelocity = v;
@@ -56,12 +57,33 @@ public class Planet{
 		this.y = this.tempY;
 	}
 
+	public Point2D convertPosition(){
+		double x = this.x*Util.SCALE+Util.WIDTH/2;
+		double y = this.y*Util.SCALE+Util.HEIGHT/2;
+		return new Point2D(x, y);
+	}
+
 	public void render(GraphicsContext gc){
-		final double x = this.x*Util.SCALE+Util.WIDTH/2;
-		final double y = this.y*Util.SCALE+Util.HEIGHT/2;
+		Point2D pos = convertPosition();
 			
 		gc.setFill(this.color);
-		final double radius = this.radius; //*Util.SCALE*10;
-		gc.fillOval(x-radius, y-radius, radius*2, radius*2);
+		final double radius = this.radius*Util.SCALE*30;
+		gc.fillOval(pos.getX()-radius, pos.getY()-radius, radius*2, radius*2);
+	}
+
+	public void renderOrbit(GraphicsContext gc, double scale){
+		Point2D pos = convertPosition();
+		this.orbit.add(pos);
+		if (this.orbit.size() == Util.MAX_ORBIT_SIZE){
+			this.orbit.remove(0);
+		}
+
+		for (int i = 0; i < this.orbit.size()-1; i++){
+			Point2D a = this.orbit.get(i);
+			Point2D b = this.orbit.get(i+1);
+			gc.setStroke(Color.WHITE);
+			gc.setLineWidth(0.6/scale);
+			gc.strokeLine(a.getX(), a.getY(), b.getX(), b.getY());
+		}
 	}
 }

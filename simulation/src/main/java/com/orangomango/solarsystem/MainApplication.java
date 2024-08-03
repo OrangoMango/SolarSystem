@@ -6,14 +6,20 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.canvas.*;
 import javafx.scene.paint.Color;
+import javafx.scene.input.KeyCode;
 import javafx.animation.*;
 import javafx.util.Duration;
+import javafx.geometry.Point2D;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MainApplication extends Application{
 	private ArrayList<Planet> planets = new ArrayList<>();
+	private HashMap<KeyCode, Boolean> keys = new HashMap<>();
 	private long timePassed;
+	private double cameraX, cameraY;
+	private double scale = 1;
 
 	@Override
 	public void start(Stage stage){
@@ -21,6 +27,18 @@ public class MainApplication extends Application{
 		Canvas canvas = new Canvas(Util.WIDTH, Util.HEIGHT);
 		GraphicsContext gc = canvas.getGraphicsContext2D();
 		pane.getChildren().add(canvas);
+
+		canvas.setFocusTraversable(true);
+		canvas.setOnKeyPressed(e -> this.keys.put(e.getCode(), true));
+		canvas.setOnKeyReleased(e -> this.keys.put(e.getCode(), false));
+
+		canvas.setOnScroll(e -> {
+			if (e.getDeltaY() > 0){
+				this.scale += 1.5;
+			} else if (e.getDeltaY() < 0){
+				this.scale -= 1.5;
+			}
+		});
 
 		// Create planets
 		Planet sun = new Planet(Color.YELLOW, 6.96e8, 1.989e30, 0, 0);
@@ -50,10 +68,36 @@ public class MainApplication extends Application{
 		stage.show();
 	}
 
+	private void followPlanet(Planet planet){
+		Point2D pos = planet.convertPosition();
+		this.cameraX = pos.getX()*this.scale-Util.WIDTH/2;
+		this.cameraY = pos.getY()*this.scale-Util.HEIGHT/2;
+	}
+
 	private void update(GraphicsContext gc){
 		gc.clearRect(0, 0, Util.WIDTH, Util.HEIGHT);
 		gc.setFill(Color.BLACK);
 		gc.fillRect(0, 0, Util.WIDTH, Util.HEIGHT);
+
+		gc.save();
+		gc.translate(-this.cameraX, -this.cameraY);
+		gc.scale(this.scale, this.scale);
+
+		final double cameraSpeed = 50;
+		if (this.keys.getOrDefault(KeyCode.W, false)){
+			this.cameraY -= cameraSpeed;
+		} else if (this.keys.getOrDefault(KeyCode.A, false)){
+			this.cameraX -= cameraSpeed;
+		} else if (this.keys.getOrDefault(KeyCode.S, false)){
+			this.cameraY += cameraSpeed;
+		} else if (this.keys.getOrDefault(KeyCode.D, false)){
+			this.cameraX += cameraSpeed;
+		}
+
+		if (this.keys.getOrDefault(KeyCode.R, false)){
+			this.scale = 0;
+			this.keys.put(KeyCode.R, false);
+		}
 
 		for (Planet planet : planets){
 			planet.updatePosition(planets);
@@ -64,11 +108,17 @@ public class MainApplication extends Application{
 		this.timePassed += Util.TIMESTEP;
 
 		for (Planet planet : planets){
+			planet.renderOrbit(gc, this.scale);
 			planet.render(gc);
 		}
 
+		gc.restore();
+
 		gc.setFill(Color.WHITE);
 		gc.fillText(Util.getDate(this.timePassed), 20, 40);
+
+		// Follow planet
+		followPlanet(this.planets.get(1));
 	}
 
 	public static void main(String[] args){
