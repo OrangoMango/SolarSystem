@@ -12,10 +12,12 @@ public class Planet{
 	private double xVelocity, yVelocity;
 	private Color color;
 	private ArrayList<Point2D> orbit = new ArrayList<>();
+	private String name;
 
-	public Planet(Color color, double r, double m, double d, double v){
+	public Planet(String name, Color color, double r, double m, double d, double v){
+		this.name = name;
 		this.color = color;
-		this.radius = r; //Math.min(16, r/6.3e6*8);
+		this.radius = r;
 		this.mass = m;
 		this.x = -d;
 		this.yVelocity = v;
@@ -85,5 +87,10 @@ public class Planet{
 			gc.setLineWidth(0.6/scale);
 			gc.strokeLine(a.getX(), a.getY(), b.getX(), b.getY());
 		}
+	}
+
+	@Override
+	public String toString(){
+		return String.format("Planet: %s\nx: %s\ny: %s\nspeed: %s m/s\nmass: %s kg\nradius: %s m", this.name, this.x, this.y, (new Point2D(this.xVelocity, this.yVelocity)).magnitude(), this.mass, this.radius);
 	}
 }
